@@ -1,7 +1,9 @@
 import discord
 from discord.ext import commands
 import yt_dlp
+8spgyl-codex/set-up-basic-discord-music-bot
 import json
+
 
 bot = commands.Bot(command_prefix="!")
 
@@ -80,6 +82,7 @@ async def skip(ctx):
         await ctx.send("Nothing is playing")
 
 if __name__ == "__main__":
+  8spgyl-codex/set-up-basic-discord-music-bot
     try:
         with open("config.json", "r") as f:
             config = json.load(f)

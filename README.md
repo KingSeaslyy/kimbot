@@ -14,16 +14,13 @@ A simple Discord music bot using `discord.py` and `yt-dlp`.
    pip install -r requirements.txt
    ```
    Ensure `ffmpeg` is installed on your system for audio playback.
+   8spgyl-codex/set-up-basic-discord-music-bot
 3. Copy `config.json.example` to `config.json` and edit it to include your
    Discord bot token:
    ```bash
    cp config.json.example config.json
    # then edit config.json and set the "token" value
-   ```
-4. Run the bot:
-   ```bash
-   python bot.py
-   ```
+=======
 
 ## Commands
 
