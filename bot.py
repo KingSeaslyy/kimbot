@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 import yt_dlp
 import json
+import os
 
 bot = commands.Bot(command_prefix="!")
 
@@ -86,14 +87,20 @@ async def skip(ctx):
         await ctx.send("Nothing is playing")
 
 if __name__ == "__main__":
+    token = None
     try:
         with open("config.json", "r") as f:
             config = json.load(f)
         token = config.get("token")
     except FileNotFoundError:
-        raise RuntimeError(
-            "config.json not found. Copy config.json.example and add your Discord token."
-        )
+        pass
+
     if not token:
-        raise RuntimeError("Discord token not provided in config.json")
+        token = os.environ.get("DISCORD_TOKEN")
+
+    if not token:
+        raise RuntimeError(
+            "Discord token not provided. Set it in config.json or the DISCORD_TOKEN environment variable."
+        )
+
     bot.run(token)
