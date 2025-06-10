@@ -10,10 +10,11 @@ A simple Discord music bot using `discord.py` and `yt-dlp`.
    cd kimbot
    ```
 2. Install the requirements:
-   ```bash
-   pip install -r requirements.txt
-   ```
+    ```bash
+    pip install -r requirements.txt
+    ```
    Ensure `ffmpeg` is installed on your system for audio playback.
+   This bot has been tested with `discord.py==2.3.2` and `yt-dlp==2024.4.27`.
 3. Copy `config.json.example` to `config.json` and edit it to include your
    Discord bot token. Alternatively set the token via the `DISCORD_TOKEN`
    environment variable:
