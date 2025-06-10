@@ -46,3 +46,6 @@ Tracks are queued and played in order.
 If you are using CubeCoders AMP, the repository includes `amp_module.py` which
 registers the bot as a managed server. AMP will load this file automatically and
 start `bot.py` as a Python application.
+
+When AMP launches the bot it expects `config.json` to be in its working directory (usually alongside `bot.py` and `amp_module.py`). If the file is missing, the bot will not start. Check AMP's logs for an error about the missing config if this happens.
+
