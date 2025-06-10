@@ -23,6 +23,8 @@ A simple Discord music bot using `discord.py` and `yt-dlp`.
 4. Run the bot:
    ```bash
    python bot.py
+   # or execute it directly
+   ./bot.py
    ```
 
 ## Commands
@@ -35,3 +37,9 @@ A simple Discord music bot using `discord.py` and `yt-dlp`.
 - `!skip` - Skip the current track.
 
 Tracks are queued and played in order.
+
+## AMP integration
+
+If you are using CubeCoders AMP, the repository includes `amp_module.py` which
+registers the bot as a managed server. AMP will load this file automatically and
+start `bot.py` as a Python application.
