@@ -6,14 +6,20 @@ import json
 
 bot = commands.Bot(command_prefix="!")
 
-queue = []
+queue = []  # list of dicts with keys 'title' and 'url'
 
 async def play_next(ctx):
-    if queue:
-        source = queue.pop(0)
-        ctx.voice_client.play(discord.FFmpegPCMAudio(source), after=lambda e: bot.loop.create_task(play_next(ctx)))
-    else:
+    if not queue:
         await ctx.send("Queue is empty")
+        return
+
+    next_track = queue.pop(0)
+    source = discord.FFmpegPCMAudio(
+        next_track["url"],
+        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+    )
+    ctx.voice_client.play(source, after=lambda e: bot.loop.create_task(play_next(ctx)))
+    await ctx.send(f"Now playing: {next_track['title']}")
 
 @bot.event
 async def on_ready():
@@ -43,15 +49,14 @@ async def play(ctx, *, query: str):
             await ctx.send("Join a voice channel first or use !join")
             return
     ydl_opts = {
-        'format': 'bestaudio/best',
-        'noplaylist': True,
-        'quiet': True,
-        'extract_flat': True
+        "format": "bestaudio/best",
+        "noplaylist": True,
+        "quiet": True,
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(f"ytsearch:{query}", download=False)['entries'][0]
-        url = info['url']
-        queue.append(url)
+        info = ydl.extract_info(f"ytsearch:{query}", download=False)["entries"][0]
+        track = {"title": info["title"], "url": info["url"]}
+        queue.append(track)
     if not ctx.voice_client.is_playing():
         await play_next(ctx)
     await ctx.send(f"Queued: {info['title']}")

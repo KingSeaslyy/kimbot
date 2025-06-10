@@ -23,6 +23,8 @@ A simple Discord music bot using `discord.py` and `yt-dlp`.
 4. Run the bot:
    ```bash
    python bot.py
+   # or execute it directly
+   ./bot.py
    ```
 
 ## Commands
