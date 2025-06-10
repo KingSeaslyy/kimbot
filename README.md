@@ -10,25 +10,25 @@ A simple Discord music bot using `discord.py` and `yt-dlp`.
    cd kimbot
    ```
 2. Install the requirements:
-    ```bash
-    pip install -r requirements.txt
-    ```
+   ```bash
+   pip install -r requirements.txt
+   ```
    Ensure `ffmpeg` is installed on your system for audio playback.
-   This bot has been tested with `discord.py==2.3.2` and `yt-dlp==2024.4.27`.
-3. Copy `config.json.example` to `config.json` and edit it to include your
-   Discord bot token. Alternatively set the token via the `DISCORD_TOKEN`
-   environment variable:
+3. Provide your Discord bot token via a `.env` file or a config file. To use a
+   config file, copy `config.json.example` to `config.json` and edit the token
+   value:
    ```bash
    cp config.json.example config.json
    # then edit config.json and set the "token" value
    ```
-   If `config.json` is missing or the `token` field is empty, `bot.py`
-   will use the value of `DISCORD_TOKEN` if it is set.
+   Alternatively, copy `.env.example` to `.env` and set the `DISCORD_TOKEN`
+   variable or export `DISCORD_TOKEN` in your environment. AMP's Python App
+   Runner will automatically read the `.env` file.
+   Ensure the "Message Content Intent" is enabled for your bot in the Discord
+   Developer Portal.
 4. Run the bot:
    ```bash
    python bot.py
-   # or execute it directly
-   ./bot.py
    ```
 
 ## Commands
@@ -41,12 +41,3 @@ A simple Discord music bot using `discord.py` and `yt-dlp`.
 - `!skip` - Skip the current track.
 
 Tracks are queued and played in order.
-
-## AMP integration
-
-If you are using CubeCoders AMP, the repository includes `amp_module.py` which
-registers the bot as a managed server. AMP will load this file automatically and
-start `bot.py` as a Python application.
-
-When AMP launches the bot it expects `config.json` to be in its working directory (usually alongside `bot.py` and `amp_module.py`). If the file is missing, the bot will not start. Check AMP's logs for an error about the missing config if this happens.
-

@@ -1,106 +1,130 @@
 #!/usr/bin/env python3
-import discord
-from discord.ext import commands
-import yt_dlp
+"""Simple Discord music bot ready for AMP's Python App Runner."""
+
+import asyncio
 import json
 import os
+from typing import Tuple
 
-bot = commands.Bot(command_prefix="!")
+import discord
+from discord.ext import commands
+from yt_dlp import YoutubeDL
+from dotenv import load_dotenv
 
-queue = []  # list of dicts with keys 'title' and 'url'
+# Load environment variables from .env if present
+load_dotenv()
 
-async def play_next(ctx):
-    if not queue:
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+queue: asyncio.Queue[Tuple[str, str]] = asyncio.Queue()
+
+
+def get_audio(query: str) -> Tuple[str, str]:
+    """Return direct audio URL and title for the first YouTube search result."""
+    ydl_opts = {
+        "format": "bestaudio/best",
+        "noplaylist": True,
+        "quiet": True,
+    }
+    with YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(f"ytsearch1:{query}", download=False)["entries"][0]
+        return info["url"], info["title"]
+
+
+async def play_next(ctx: commands.Context) -> None:
+    if ctx.voice_client is None:
+        return
+    if queue.empty():
         await ctx.send("Queue is empty")
         return
-
-    next_track = queue.pop(0)
-    source = discord.FFmpegPCMAudio(
-        next_track["url"],
-        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+    url, title = await queue.get()
+    source = discord.FFmpegPCMAudio(url)
+    ctx.voice_client.play(
+        source,
+        after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), bot.loop),
     )
-    ctx.voice_client.play(source, after=lambda e: bot.loop.create_task(play_next(ctx)))
-    await ctx.send(f"Now playing: {next_track['title']}")
+    await ctx.send(f"Now playing: {title}")
+
 
 @bot.event
-async def on_ready():
+async def on_ready() -> None:
     print(f"Logged in as {bot.user}")
 
+
 @bot.command()
-async def join(ctx):
+async def join(ctx: commands.Context) -> None:
     if ctx.author.voice:
-        channel = ctx.author.voice.channel
-        await channel.connect()
+        await ctx.author.voice.channel.connect()
     else:
         await ctx.send("You are not in a voice channel.")
 
+
 @bot.command()
-async def leave(ctx):
+async def leave(ctx: commands.Context) -> None:
     if ctx.voice_client:
         await ctx.voice_client.disconnect()
     else:
         await ctx.send("I am not connected to a voice channel.")
 
+
 @bot.command()
-async def play(ctx, *, query: str):
+async def play(ctx: commands.Context, *, query: str) -> None:
     if not ctx.voice_client:
         if ctx.author.voice:
             await ctx.author.voice.channel.connect()
         else:
             await ctx.send("Join a voice channel first or use !join")
             return
-    ydl_opts = {
-        "format": "bestaudio/best",
-        "noplaylist": True,
-        "quiet": True,
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(f"ytsearch:{query}", download=False)["entries"][0]
-        track = {"title": info["title"], "url": info["url"]}
-        queue.append(track)
+    url, title = get_audio(query)
+    await queue.put((url, title))
+    await ctx.send(f"Queued: {title}")
     if not ctx.voice_client.is_playing():
         await play_next(ctx)
-    await ctx.send(f"Queued: {info['title']}")
+
 
 @bot.command()
-async def pause(ctx):
+async def pause(ctx: commands.Context) -> None:
     if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.pause()
         await ctx.send("Paused")
     else:
         await ctx.send("Nothing is playing")
 
+
 @bot.command()
-async def resume(ctx):
+async def resume(ctx: commands.Context) -> None:
     if ctx.voice_client and ctx.voice_client.is_paused():
         ctx.voice_client.resume()
         await ctx.send("Resumed")
     else:
         await ctx.send("Nothing is paused")
 
+
 @bot.command()
-async def skip(ctx):
+async def skip(ctx: commands.Context) -> None:
     if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.stop()
         await ctx.send("Skipped")
     else:
         await ctx.send("Nothing is playing")
 
-if __name__ == "__main__":
-    token = None
+
+def load_token() -> str:
+    token = os.getenv("DISCORD_TOKEN")
+    if token:
+        return token
     try:
-        with open("config.json", "r") as f:
-            config = json.load(f)
-        token = config.get("token")
+        with open("config.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("token", "")
     except FileNotFoundError:
         pass
+    raise RuntimeError(
+        "Discord token not provided. Set DISCORD_TOKEN or create config.json"
+    )
 
-    if not token:
-        token = os.environ.get("DISCORD_TOKEN")
 
-    if not token:
-        raise RuntimeError(
-            "Discord token not provided. Set it in config.json or the DISCORD_TOKEN environment variable."
-        )
-
-    bot.run(token)
+if __name__ == "__main__":
+    bot.run(load_token())
